@@ -17,13 +17,13 @@ extern NSString *DZWebDAVContentTypeKey;
 extern NSString *DZWebDAVETagKey;
 
 /** The key for a content identifier tag returned from the property request methods. This is only supported on some servers, and usually defines whether the contents of a collection (folder) have changed. */
-extern NSString *DZWebDAVCTagKey;
+extern NSString *DZWebDAVContentLengthKey;
 
 /** The key for the creation date of an entity. */
 extern NSString *DZWebDAVCreationDateKey;
 
 /** The key for last modification date of an entity. */
-extern NSString *DZWebDAVModificationDateKey;
+extern NSString *DZWebDAVLastModifiedDateKey;
 
 @class DZWebDAVLock;
 

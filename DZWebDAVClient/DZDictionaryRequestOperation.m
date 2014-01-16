@@ -83,8 +83,4 @@ static dispatch_queue_t xml_request_operation_processing_queue() {
     return requestOperation;
 }
 
-+ (BOOL)canProcessRequest:(NSURLRequest *)urlRequest {
-    return YES;
-}
-
 @end

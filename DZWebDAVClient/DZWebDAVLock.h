@@ -11,7 +11,7 @@
 @interface DZWebDAVLock : NSObject <NSCopying, NSCoding>
 
 - (id)initWithURL:(NSURL *)URL responseObject:(id)object;
-- (id)updateFromResponseObject:(id)object;
+- (void)updateFromResponseObject:(id)object;
 
 @property (nonatomic, readonly) NSURL *URL;
 

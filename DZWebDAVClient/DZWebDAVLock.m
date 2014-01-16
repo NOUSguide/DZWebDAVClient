@@ -34,7 +34,7 @@
     return self;
 }
 
-- (id)updateFromResponseObject:(id)object {
+- (void)updateFromResponseObject:(id)object {
     if ([object valueForKey: @"exclusive"])
         _exclusive = YES;
     if ([object valueForKey: @"depth"])
@@ -52,6 +52,8 @@
     new->_recursive = _recursive;
     new->_timeout = _timeout;
     new->_token = [_token copy];
+    
+    return new;
 }
 
 - (void)encodeWithCoder:(NSCoder *)aCoder {

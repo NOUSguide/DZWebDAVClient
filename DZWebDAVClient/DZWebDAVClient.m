@@ -33,10 +33,10 @@ NSString const *DZWebDAVCreationDateKey		= @"lp1:creationdate";
     return self;
 }
 
-- (AFHTTPRequestOperation *)mr_operationWithRequest:(NSURLRequest *)request success:(void(^)(void))success failure:(void(^)(AFHTTPRequestOperation *, NSError *))failure {
+- (AFHTTPRequestOperation *)mr_operationWithRequest:(NSURLRequest *)request success:(void(^)(AFHTTPRequestOperation *))success failure:(void(^)(AFHTTPRequestOperation *, NSError *))failure {
 	return [self HTTPRequestOperationWithRequest:request success:^(AFHTTPRequestOperation *operation, id responseObject) {
 		if (success)
-			success();
+			success(operation);
 	} failure:failure];
 }
 
@@ -47,28 +47,34 @@ NSString const *DZWebDAVCreationDateKey		= @"lp1:creationdate";
     return request;
 }
 
-- (void)copyPath:(NSString *)source toPath:(NSString *)destination success:(void(^)(void))success failure:(void(^)(AFHTTPRequestOperation *, NSError *))failure {
+- (AFHTTPRequestOperation *)copyPath:(NSString *)source toPath:(NSString *)destination success:(void(^)(AFHTTPRequestOperation *))success failure:(void(^)(AFHTTPRequestOperation *, NSError *))failure {
     NSString *destinationPath = [[self.baseURL URLByAppendingPathComponent:destination] absoluteString];
     NSMutableURLRequest *request = [self requestWithMethod:@"COPY" path:source parameters:nil];
     [request setValue:destinationPath forHTTPHeaderField:@"Destination"];
 	[request setValue:@"T" forHTTPHeaderField:@"Overwrite"];
 	AFHTTPRequestOperation *operation = [self mr_operationWithRequest:request success:success failure:failure];
     [self enqueueHTTPRequestOperation:operation];
+
+    return operation;
 }
 
-- (void)movePath:(NSString *)source toPath:(NSString *)destination success:(void(^)(void))success failure:(void(^)(AFHTTPRequestOperation *, NSError *))failure {
+- (AFHTTPRequestOperation *)movePath:(NSString *)source toPath:(NSString *)destination success:(void(^)(AFHTTPRequestOperation *))success failure:(void(^)(AFHTTPRequestOperation *, NSError *))failure {
     NSString *destinationPath = [[self.baseURL URLByAppendingPathComponent:destination] absoluteString];
     NSMutableURLRequest *request = [self requestWithMethod:@"MOVE" path:source parameters:nil];
     [request setValue:destinationPath forHTTPHeaderField:@"Destination"];
 	[request setValue:@"T" forHTTPHeaderField:@"Overwrite"];
 	AFHTTPRequestOperation *operation = [self mr_operationWithRequest:request success:success failure:failure];
     [self enqueueHTTPRequestOperation:operation];
+    
+    return operation;
 }
 
-- (void)deletePath:(NSString *)path success:(void(^)(void))success failure:(void(^)(AFHTTPRequestOperation *, NSError *))failure {
+- (AFHTTPRequestOperation *)deletePath:(NSString *)path success:(void(^)(AFHTTPRequestOperation *))success failure:(void(^)(AFHTTPRequestOperation *, NSError *))failure {
     NSMutableURLRequest *request = [self requestWithMethod:@"DELETE" path:path parameters:nil];
 	AFHTTPRequestOperation *operation = [self mr_operationWithRequest:request success:success failure:failure];
     [self enqueueHTTPRequestOperation:operation];
+    
+    return operation;
 }
 
 - (void)getPath:(NSString *)remoteSource success:(void(^)(AFHTTPRequestOperation *, id))success failure:(void(^)(AFHTTPRequestOperation *, NSError *))failure {
@@ -165,7 +171,7 @@ NSString const *DZWebDAVCreationDateKey		= @"lp1:creationdate";
 	[self mr_listPath:path depth:2 success:success failure:failure];
 }
 
-- (void)downloadPath:(NSString *)remoteSource toURL:(NSURL *)localDestination success:(void(^)(void))success failure:(void(^)(AFHTTPRequestOperation *, NSError *))failure {
+- (AFHTTPRequestOperation *)downloadPath:(NSString *)remoteSource toURL:(NSURL *)localDestination success:(void(^)(AFHTTPRequestOperation *))success failure:(void(^)(AFHTTPRequestOperation *, NSError *))failure {
 	if ([self.fileManager respondsToSelector:@selector(createDirectoryAtURL:withIntermediateDirectories:attributes:error:) ]) {
 		[self.fileManager createDirectoryAtURL: [localDestination URLByDeletingLastPathComponent] withIntermediateDirectories: YES attributes: nil error: NULL];
 	} else {
@@ -175,6 +181,8 @@ NSString const *DZWebDAVCreationDateKey		= @"lp1:creationdate";
 	AFHTTPRequestOperation *operation = [self mr_operationWithRequest:request success:success failure:failure];
 	operation.outputStream = [NSOutputStream outputStreamWithURL: localDestination append: NO];
     [self enqueueHTTPRequestOperation:operation];
+    
+    return operation;
 }
 
 - (void)downloadPaths:(NSArray *)remoteSources toURL:(NSURL *)localFolder progressBlock:(void(^)(NSUInteger, NSUInteger))progressBlock completionBlock:(void(^)(NSArray *))completionBlock {
@@ -196,30 +204,34 @@ NSString const *DZWebDAVCreationDateKey		= @"lp1:creationdate";
 	[self enqueueBatchOfHTTPRequestOperations:operations progressBlock:progressBlock completionBlock:completionBlock];
 }
 
-- (void)makeCollection:(NSString *)path success:(void(^)(void))success failure:(void(^)(AFHTTPRequestOperation *, NSError *))failure {
+- (void)makeCollection:(NSString *)path success:(void(^)(AFHTTPRequestOperation *))success failure:(void(^)(AFHTTPRequestOperation *, NSError *))failure {
 	NSURLRequest *request = [self requestWithMethod:@"MKCOL" path:path parameters:nil];	
 	AFHTTPRequestOperation *operation = [self mr_operationWithRequest:request success:success failure:failure];
     [self enqueueHTTPRequestOperation:operation];
 }
 
-- (void)put:(NSData *)data path:(NSString *)remoteDestination success:(void(^)(void))success failure:(void(^)(AFHTTPRequestOperation *, NSError *))failure {
+- (AFHTTPRequestOperation *)put:(NSData *)data path:(NSString *)remoteDestination success:(void(^)(AFHTTPRequestOperation *))success failure:(void(^)(AFHTTPRequestOperation *, NSError *))failure {
     NSMutableURLRequest *request = [self requestWithMethod:@"PUT" path:remoteDestination parameters:nil];
 	[request setValue:@"application/octet-stream" forHTTPHeaderField:@"Content-Type"];
 	[request setValue:[NSString stringWithFormat:@"%ld", (long)data.length] forHTTPHeaderField:@"Content-Length"];
 	AFHTTPRequestOperation *operation = [self mr_operationWithRequest:request success:success failure:failure];
 	operation.inputStream = [NSInputStream inputStreamWithData:data];
     [self enqueueHTTPRequestOperation:operation];
+    
+    return operation;
 }
 
-- (void)putURL:(NSURL *)localSource path:(NSString *)remoteDestination success:(void(^)(void))success failure:(void(^)(AFHTTPRequestOperation *, NSError *))failure {
+- (AFHTTPRequestOperation *)putURL:(NSURL *)localSource path:(NSString *)remoteDestination success:(void(^)(AFHTTPRequestOperation *))success failure:(void(^)(AFHTTPRequestOperation *, NSError *))failure {
     NSMutableURLRequest *request = [self requestWithMethod:@"PUT" path:remoteDestination parameters:nil];
 	[request setValue:@"application/octet-stream" forHTTPHeaderField:@"Content-Type"];
 	AFHTTPRequestOperation *operation = [self mr_operationWithRequest:request success:success failure:failure];
 	operation.inputStream = [NSInputStream inputStreamWithURL:localSource];
     [self enqueueHTTPRequestOperation:operation];
+    
+    return  operation;
 }
 
-- (void)lockPath:(NSString *)path exclusive:(BOOL)exclusive recursive:(BOOL)recursive timeout:(NSTimeInterval)timeout success:(void(^)(AFHTTPRequestOperation *operation, DZWebDAVLock *lock))success failure:(void(^)(AFHTTPRequestOperation *operation, NSError *error))failure {
+- (AFHTTPRequestOperation *)lockPath:(NSString *)path exclusive:(BOOL)exclusive recursive:(BOOL)recursive timeout:(NSTimeInterval)timeout success:(void(^)(AFHTTPRequestOperation *operation, DZWebDAVLock *lock))success failure:(void(^)(AFHTTPRequestOperation *operation, NSError *error))failure {
     NSParameterAssert(success);
     NSMutableURLRequest *request = [self requestWithMethod: @"LOCK" path: path parameters: nil];
     [request setValue: @"application/xml" forHTTPHeaderField: @"Content-Type"];
@@ -231,9 +243,11 @@ NSString const *DZWebDAVCreationDateKey		= @"lp1:creationdate";
         success(operation, [[DZWebDAVLock alloc] initWithURL: operation.request.URL responseObject: responseObject]);
     } failure: failure];
     [self enqueueHTTPRequestOperation: operation];
+    
+    return operation;
 }
 
-- (void)refreshLock:(DZWebDAVLock *)lock success:(void(^)(AFHTTPRequestOperation *operation, DZWebDAVLock *lock))success failure:(void(^)(AFHTTPRequestOperation *operation, NSError *error))failure {
+- (AFHTTPRequestOperation *)refreshLock:(DZWebDAVLock *)lock success:(void(^)(AFHTTPRequestOperation *operation, DZWebDAVLock *lock))success failure:(void(^)(AFHTTPRequestOperation *operation, NSError *error))failure {
     NSMutableURLRequest *request = [self requestWithMethod: @"LOCK" path: lock.URL.path parameters: nil];
     [request setValue: [NSString stringWithFormat:@"(<%@>)", lock.token] forHTTPHeaderField: @"If"];
     [request setValue: lock.timeout ? [NSString stringWithFormat: @"Second-%f", lock.timeout] : @"Infinite, Second-4100000000" forHTTPHeaderField: @"Timeout"];
@@ -243,14 +257,18 @@ NSString const *DZWebDAVCreationDateKey		= @"lp1:creationdate";
         success(operation, lock);
     } failure: failure];
     [self enqueueHTTPRequestOperation: operation];
+    
+    return operation;
 }
 
-- (void)unlock:(DZWebDAVLock *)lock success:(void(^)(void))success failure:(void(^)(AFHTTPRequestOperation *operation, NSError *error))failure {
+- (AFHTTPRequestOperation *)unlock:(DZWebDAVLock *)lock success:(void(^)(AFHTTPRequestOperation *))success failure:(void(^)(AFHTTPRequestOperation *operation, NSError *error))failure {
     NSMutableURLRequest *request = [self requestWithMethod: @"UNLOCK" path: lock.URL.path parameters: nil];
 	[request setValue:@"application/xml" forHTTPHeaderField:@"Content-Type"];
 	[request setValue:[NSString stringWithFormat:@"<%@>", lock.token] forHTTPHeaderField:@"Lock-Token"];
     AFHTTPRequestOperation *operation = [self mr_operationWithRequest:request success:success failure:failure];
     [self enqueueHTTPRequestOperation:operation];
+    
+    return operation;
 }
 
 @end

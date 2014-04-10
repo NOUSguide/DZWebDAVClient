@@ -83,9 +83,9 @@ static dispatch_queue_t xml_request_operation_processing_queue() {
     return requestOperation;
 }
 
-//needed to use the webdav PROPFIND feature
 + (BOOL)canProcessRequest:(NSURLRequest *)urlRequest {
-    return [urlRequest.HTTPMethod isEqualToString:@"PROPFIND"];
+    NSArray *allowedHTTPMethods = @[@"GET", @"MKCOL", @"PUT", @"PROPFIND", @"LOCK", @"UNLOCK"];
+    return [allowedHTTPMethods containsObject:urlRequest.HTTPMethod] || [super canProcessRequest:urlRequest];
 }
 
 @end

@@ -95,7 +95,7 @@ NSString const *DZWebDAVCreationDateKey		= @"creationdate";
 	if (depth <= 0)
 		depthHeader = @"0";
 	else if (depth == 1)
-		depthHeader = @"infinity";
+		depthHeader = @"1";
 	else
 		depthHeader = @"infinity";
     [request setValue: depthHeader forHTTPHeaderField: @"Depth"];
@@ -103,10 +103,10 @@ NSString const *DZWebDAVCreationDateKey		= @"creationdate";
     [request setValue:@"application/xml" forHTTPHeaderField:@"Content-Type"];
 	AFHTTPRequestOperation *operation = [self HTTPRequestOperationWithRequest:request success:^(AFHTTPRequestOperation *operation, id responseObject) {
 		if (responseObject == nil || ![responseObject isKindOfClass:[NSDictionary class]]) {
-            		if (failure)
-                		failure(operation, [NSError errorWithDomain:AFNetworkingErrorDomain code:NSURLErrorCannotParseResponse userInfo:nil]);
-            		return;
-	        }
+            if (failure)
+                failure(operation, [NSError errorWithDomain:AFNetworkingErrorDomain code:NSURLErrorCannotParseResponse userInfo:nil]);
+            return;
+        }
         
 		id checkItems = [responseObject valueForKeyPath:@"multistatus.response.propstat.prop"];
         id checkHrefs = [responseObject valueForKeyPath:@"multistatus.response.href"];

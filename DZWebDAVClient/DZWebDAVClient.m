@@ -42,6 +42,10 @@ NSString const *DZWebDAVCreationDateKey		= @"creationdate";
 }
 
 - (NSMutableURLRequest *)requestWithMethod:(NSString *)method path:(NSString *)path parameters:(NSDictionary *)parameters {
+    if ([path rangeOfString:@"remote.php/webdav"].location == NSNotFound) {
+        path = [NSString stringWithFormat:@"remote.php/webdav/%@", path];
+    }
+
     NSMutableURLRequest *request = [super requestWithMethod:method path:path parameters:parameters];
     [request setCachePolicy: NSURLRequestReloadIgnoringLocalCacheData];
     [request setTimeoutInterval: 300];
@@ -117,13 +121,15 @@ NSString const *DZWebDAVCreationDateKey		= @"creationdate";
 		NSDictionary *unformattedDict = [NSDictionary dictionaryWithObjects: objects forKeys: keys];
 		NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithCapacity: unformattedDict.count];
 		
-		[unformattedDict enumerateKeysAndObjectsUsingBlock:^(NSString *absoluteKey, NSDictionary *unformatted, BOOL *stop) {
+		[unformattedDict enumerateKeysAndObjectsUsingBlock:^(NSString *absoluteKey, id possibleArrayOrDict, BOOL *stop) {
 			// filter out Finder thumbnail files (._filename), they get us screwed up.
 			if ([absoluteKey.lastPathComponent hasPrefix: @"._"])
 				return;
+
+            NSDictionary *unformatted = [possibleArrayOrDict isKindOfClass:[NSDictionary class]] ? (NSDictionary *)possibleArrayOrDict : (NSDictionary *)[possibleArrayOrDict objectAtIndex:0];
 			
 			// Replace an absolute path with a relative one
-			NSString *key = [absoluteKey stringByReplacingOccurrencesOfString:self.baseURL.path withString:@""];
+			NSString *key = [absoluteKey stringByReplacingOccurrencesOfString:@"/remote.php/webdav" withString:@""];
 			if ([[key substringToIndex:1] isEqualToString:@"/"])
 				key = [key substringFromIndex:1];
 			

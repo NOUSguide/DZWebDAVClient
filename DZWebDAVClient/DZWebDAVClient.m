@@ -48,7 +48,7 @@ NSString const *DZWebDAVCreationDateKey		= @"creationdate";
 
     NSMutableURLRequest *request = [super requestWithMethod:method path:path parameters:parameters];
     [request setCachePolicy: NSURLRequestReloadIgnoringLocalCacheData];
-    [request setTimeoutInterval: 300];
+    [request setTimeoutInterval: 30];
     return request;
 }
 
@@ -177,6 +177,10 @@ NSString const *DZWebDAVCreationDateKey		= @"creationdate";
 
 - (AFHTTPRequestOperation *)listPath:(NSString *)path success:(void(^)(AFHTTPRequestOperation *, id))success failure:(void(^)(AFHTTPRequestOperation *, NSError *))failure {
 	return [self mr_listPath:path depth:1 success:success failure:failure];
+}
+
+- (AFHTTPRequestOperation *)listPath:(NSString *)path recursive:(BOOL)recursive success:(void(^)(AFHTTPRequestOperation *, id))success failure:(void(^)(AFHTTPRequestOperation *, NSError *))failure {
+    return [self mr_listPath:path depth:recursive ? 2 : 1 success:success failure:failure];
 }
 
 - (AFHTTPRequestOperation *)recursiveListPath:(NSString *)path success:(void(^)(AFHTTPRequestOperation *, id))success failure:(void(^)(AFHTTPRequestOperation *, NSError *))failure {

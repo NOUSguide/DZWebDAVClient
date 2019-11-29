@@ -126,6 +126,23 @@ extern NSString *DZWebDAVLastModifiedDateKey;
                              failure:(void(^)(AFHTTPRequestOperation *operation, NSError *error))failure;
 
 /**
+ Enqueues a request to list the contents of a single collection and
+ the properties of each object, including the properties of the
+ collection itself and eventually all subsequent objects, using a `PROPFIND` request.
+ 
+ @param path The directory for which to list the contents.
+ @param recursive Indicates if the path listing should contain all recursive subfolders
+ @param success A block callback, to be fired upon successful completion, with two arguments: the request operation and a dictionary with the properties of the directory and its contents.
+ @param failure A block callback, to be fired upon the failure of either the request or the parsing of the request's data, with two arguments: the request operation and the network or parsing error that occurred.
+ 
+ @see propertiesOfPath:success:failure:
+ @see recursiveListPath:success:failure:
+ */
+- (AFHTTPRequestOperation *)listPath:(NSString *)path
+                           recursive:(BOOL)recursive
+                             success:(void(^)(AFHTTPRequestOperation *operation, id responseObject))success
+                             failure:(void(^)(AFHTTPRequestOperation *operation, NSError *error))failure;
+/**
  Enqueues a request to list the contents of a collection, all
  subsequent objects, and the properties of each object, including
  the parent collection, using a `PROPFIND` request.

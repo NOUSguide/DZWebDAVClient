@@ -8,7 +8,7 @@
 //  Licensed under MIT. See LICENSE.
 //
 
-#import "AFHTTPClient.h"
+#import <AFNetworking/AFNetworking.h>
 
 /** The key for a uniform (MIME) type identifier returned from the property request methods. */
 extern NSString *DZWebDAVContentTypeKey;
@@ -27,7 +27,7 @@ extern NSString *DZWebDAVLastModifiedDateKey;
 
 @class DZWebDAVLock;
 
-@interface DZWebDAVClient : AFHTTPClient
+@interface DZWebDAVClient : AFHTTPSessionManager
 
 /**
  Enqueues an operation to copy the object at a path to another path using a `COPY` request.
@@ -37,10 +37,10 @@ extern NSString *DZWebDAVLastModifiedDateKey;
  @param success A block callback, to be fired upon successful completion, with no arguments.
  @param failure A block callback, to be fired upon the failure of the request, with two arguments: the request operation and the network error that occurred.
  */
-- (AFHTTPRequestOperation *)copyPath:(NSString *)source
-                              toPath:(NSString *)destination
-                             success:(void(^)(void))success
-                             failure:(void(^)(AFHTTPRequestOperation *operation, NSError *error))failure;
+- (NSURLSessionTask *)copyPath:(NSString *)source
+                        toPath:(NSString *)destination
+                       success:(void(^)(void))success
+                       failure:(void(^)(NSURLSessionDataTask *task, NSError *error))failure;
 
 /**
  Enqueues an operation to move the object at a path to another path using a `MOVE` request.
@@ -50,10 +50,10 @@ extern NSString *DZWebDAVLastModifiedDateKey;
  @param success A block callback, to be fired upon successful completion, with no arguments.
  @param failure A block callback, to be fired upon the failure of the request, with two arguments: the request operation and the network error that occurred.
  */
-- (AFHTTPRequestOperation *)movePath:(NSString *)source
-                              toPath:(NSString *)destination
-                             success:(void(^)(void))success
-                             failure:(void(^)(AFHTTPRequestOperation *operation, NSError *error))failure;
+- (NSURLSessionTask *)movePath:(NSString *)source
+                        toPath:(NSString *)destination
+                       success:(void(^)(void))success
+                       failure:(void(^)(NSURLSessionDataTask *task, NSError *error))failure;
 
 /**
  Enqueues an operation to delete the object at a path using a `DELETE` request.
@@ -62,9 +62,9 @@ extern NSString *DZWebDAVLastModifiedDateKey;
  @param success A block callback, to be fired upon successful completion, with no arguments.
  @param failure A block callback, to be fired upon the failure of the request, with two arguments: the request operation and the network error that occurred.
  */
-- (AFHTTPRequestOperation *)deletePath:(NSString *)path
-                               success:(void(^)(void))success
-                               failure:(void(^)(AFHTTPRequestOperation *operation, NSError *error))failure;
+- (NSURLSessionTask *)deletePath:(NSString *)path
+                         success:(void(^)(void))success
+                         failure:(void(^)(NSURLSessionDataTask *task, NSError *error))failure;
 
 /**
  Enqueues an operation to load the contents of a remote file into memory using a `GET` request.
@@ -76,9 +76,9 @@ extern NSString *DZWebDAVLastModifiedDateKey;
  @see getPath:parameters:success:failure:
  @see downloadPath:toURL:success:failure:
  */
-- (AFHTTPRequestOperation *)getPath:(NSString *)remoteSource
-                            success:(void(^)(AFHTTPRequestOperation *operation, id responseObject))success
-                            failure:(void(^)(AFHTTPRequestOperation *operation, NSError *error))failure;
+- (NSURLSessionTask *)getPath:(NSString *)remoteSource
+                      success:(void(^)(NSURLSessionDataTask *task, id responseObject))success
+                      failure:(void(^)(NSURLSessionDataTask *task, NSError *error))failure;
 
 /**
  Enqueues a group of multiple operations to load the contents of multiple
@@ -105,9 +105,9 @@ extern NSString *DZWebDAVLastModifiedDateKey;
  @see listPath:success:failure:
  @see recursiveListPath:success:failure:
  */
-- (AFHTTPRequestOperation *)propertiesOfPath:(NSString *)path
-                                     success:(void(^)(AFHTTPRequestOperation *operation, id responseObject))success
-                                     failure:(void(^)(AFHTTPRequestOperation *operation, NSError *error))failure;
+- (NSURLSessionTask *)propertiesOfPath:(NSString *)path
+                               success:(void(^)(NSURLSessionDataTask *task, id responseObject))success
+                               failure:(void(^)(NSURLSessionDataTask *task, NSError *error))failure;
 
 /**
  Enqueues a request to list the contents of a single collection and
@@ -121,9 +121,9 @@ extern NSString *DZWebDAVLastModifiedDateKey;
  @see propertiesOfPath:success:failure:
  @see recursiveListPath:success:failure:
  */
-- (AFHTTPRequestOperation *)listPath:(NSString *)path
-                             success:(void(^)(AFHTTPRequestOperation *operation, id responseObject))success
-                             failure:(void(^)(AFHTTPRequestOperation *operation, NSError *error))failure;
+- (NSURLSessionTask *)listPath:(NSString *)path
+                       success:(void(^)(NSURLSessionDataTask *task, id responseObject))success
+                       failure:(void(^)(NSURLSessionDataTask *task, NSError *error))failure;
 
 /**
  Enqueues a request to list the contents of a single collection and
@@ -138,10 +138,10 @@ extern NSString *DZWebDAVLastModifiedDateKey;
  @see propertiesOfPath:success:failure:
  @see recursiveListPath:success:failure:
  */
-- (AFHTTPRequestOperation *)listPath:(NSString *)path
-                           recursive:(BOOL)recursive
-                             success:(void(^)(AFHTTPRequestOperation *operation, id responseObject))success
-                             failure:(void(^)(AFHTTPRequestOperation *operation, NSError *error))failure;
+- (NSURLSessionTask *)listPath:(NSString *)path
+                     recursive:(BOOL)recursive
+                       success:(void(^)(NSURLSessionDataTask *task, id responseObject))success
+                       failure:(void(^)(NSURLSessionDataTask *task, NSError *error))failure;
 /**
  Enqueues a request to list the contents of a collection, all
  subsequent objects, and the properties of each object, including
@@ -154,9 +154,9 @@ extern NSString *DZWebDAVLastModifiedDateKey;
  @see propertiesOfPath:success:failure:
  @see listPath:success:failure:
  */
-- (AFHTTPRequestOperation *)recursiveListPath:(NSString *)path
-                                      success:(void(^)(AFHTTPRequestOperation *operation, id responseObject))success
-                                      failure:(void(^)(AFHTTPRequestOperation *operation, NSError *error))failure;
+- (NSURLSessionTask *)recursiveListPath:(NSString *)path
+                                success:(void(^)(NSURLSessionDataTask *task, id responseObject))success
+                                failure:(void(^)(NSURLSessionDataTask *task, NSError *error))failure;
 
 /**
  Enqueues an operation to download the contents of a file directly to disk using a `GET` request.
@@ -168,10 +168,10 @@ extern NSString *DZWebDAVLastModifiedDateKey;
  
  @see getPath:success:failure:
  */
-- (AFHTTPRequestOperation *)downloadPath:(NSString *)remoteSource
-                                   toURL:(NSURL *)localDestination
-                                 success:(void(^)(void))success
-                                 failure:(void(^)(AFHTTPRequestOperation *operation, NSError *error))failure;
+- (NSURLSessionTask *)downloadPath:(NSString *)remoteSource
+                             toURL:(NSURL *)localDestination
+                           success:(void(^)(void))success
+                           failure:(void(^)(NSURLSessionDataTask *task, NSError *error))failure;
 
 /**
  Enqueues a group of multiple operations to download the contents of
@@ -196,9 +196,9 @@ extern NSString *DZWebDAVLastModifiedDateKey;
  @param success A block callback, to be fired upon successful completion, with no arguments.
  @param failure A block callback, to be fired upon the failure of the request, with two arguments: the request operation and the network error that occurred.
  */
-- (AFHTTPRequestOperation *)makeCollection:(NSString *)path
-                                   success:(void(^)(void))success
-                                   failure:(void(^)(AFHTTPRequestOperation *operation, NSError *error))failure;
+- (NSURLSessionTask *)makeCollection:(NSString *)path
+                             success:(void(^)(void))success
+                             failure:(void(^)(NSURLSessionDataTask *task, NSError *error))failure;
 
 /**
  Enqueues an operation to upload the specified data to a remote path using a `PUT` request.
@@ -210,10 +210,10 @@ extern NSString *DZWebDAVLastModifiedDateKey;
  
  @see putURL:path:success:failure:
  */
-- (AFHTTPRequestOperation *)put:(NSData *)data
-                           path:(NSString *)remoteDestination
-                        success:(void(^)(void))success
-                        failure:(void(^)(AFHTTPRequestOperation *operation, NSError *error))failure;
+- (NSURLSessionTask *)put:(NSData *)data
+                     path:(NSString *)remoteDestination
+                  success:(void(^)(void))success
+                  failure:(void(^)(NSURLSessionDataTask *task, NSError *error))failure;
 
 /**
  Enqueues an operation to upload the contents of a specified local
@@ -226,10 +226,10 @@ extern NSString *DZWebDAVLastModifiedDateKey;
  
  @see putURL:path:success:failure:
  */
-- (AFHTTPRequestOperation *)putURL:(NSURL *)localSource
-                              path:(NSString *)remoteDestination
-                           success:(void(^)(void))success
-                           failure:(void(^)(AFHTTPRequestOperation *operation, NSError *error))failure;
+- (NSURLSessionTask *)putURL:(NSURL *)localSource
+                        path:(NSString *)remoteDestination
+                     success:(void(^)(void))success
+                     failure:(void(^)(NSURLSessionDataTask *task, NSError *error))failure;
 
 /**
  Enqueues an operation to lock the collection or file
@@ -246,12 +246,12 @@ extern NSString *DZWebDAVLastModifiedDateKey;
  @see refreshLock:success:failure:
  @see unlock:success:failure:
  */
-- (AFHTTPRequestOperation *)lockPath:(NSString *)path
-                           exclusive:(BOOL)exclusive
-                           recursive:(BOOL)recursive
-                             timeout:(NSTimeInterval)timeout
-                             success:(void(^)(AFHTTPRequestOperation *operation, DZWebDAVLock *lock))success
-                             failure:(void(^)(AFHTTPRequestOperation *operation, NSError *error))failure;
+- (NSURLSessionTask *)lockPath:(NSString *)path
+                     exclusive:(BOOL)exclusive
+                     recursive:(BOOL)recursive
+                       timeout:(NSTimeInterval)timeout
+                       success:(void(^)(NSURLSessionDataTask *task, DZWebDAVLock *lock))success
+                       failure:(void(^)(NSURLSessionDataTask *task, NSError *error))failure;
 
 /**
  Enqueues an operation to re-lock a collection or file
@@ -264,9 +264,9 @@ extern NSString *DZWebDAVLastModifiedDateKey;
  @see lockPath:exclusive:recursive:timeout:success:failure:
  @see unlock:success:failure:
  */
-- (AFHTTPRequestOperation *)refreshLock:(DZWebDAVLock *)lock
-                                success:(void(^)(AFHTTPRequestOperation *operation, DZWebDAVLock *lock))success
-                                failure:(void(^)(AFHTTPRequestOperation *operation, NSError *error))failure;
+- (NSURLSessionTask *)refreshLock:(DZWebDAVLock *)lock
+                          success:(void(^)(NSURLSessionDataTask *task, DZWebDAVLock *lock))success
+                          failure:(void(^)(NSURLSessionDataTask *task, NSError *error))failure;
 
 /**
  Enqueues an operation to unlock a collection or file
@@ -279,8 +279,8 @@ extern NSString *DZWebDAVLastModifiedDateKey;
  @see lockPath:exclusive:recursive:timeout:success:failure:
  @see refreshLock:success:failure:
  */
-- (AFHTTPRequestOperation *)unlock:(DZWebDAVLock *)lock
-                           success:(void(^)(void))success
-                           failure:(void(^)(AFHTTPRequestOperation *operation, NSError *error))failure;
+- (NSURLSessionTask *)unlock:(DZWebDAVLock *)lock
+                     success:(void(^)(void))success
+                     failure:(void(^)(NSURLSessionDataTask *task, NSError *error))failure;
 
 @end

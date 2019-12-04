@@ -1,9 +1,9 @@
 //
-//  DZDictionaryRequestOperation.m
+//  DZDictionaryResponseSerializer.m
 //  DZWebDAVClient
 //
 
-#import "DZDictionaryRequestOperation.h"
+#import "DZDictionaryResponseSerializer.h"
 #import "DZXMLReader.h"
 
 static dispatch_queue_t xml_request_operation_processing_queue() {
@@ -16,11 +16,11 @@ static dispatch_queue_t xml_request_operation_processing_queue() {
     return dz_xml_request_operation_processing_queue;
 }
 
-@interface DZDictionaryRequestOperation ()
+@interface DZDictionaryResponseSerializer ()
 @property (readwrite, nonatomic, strong) NSError *parseError;
 @end
 
-@implementation DZDictionaryRequestOperation
+@implementation DZDictionaryResponseSerializer
 
 @synthesize responseDictionary = _responseDictionary, parseError = _parseError;
 
@@ -41,8 +41,8 @@ static dispatch_queue_t xml_request_operation_processing_queue() {
     }
 }
 
-- (void)setCompletionBlockWithSuccess:(void (^)(AFHTTPRequestOperation *operation, id responseObject))success
-                              failure:(void (^)(AFHTTPRequestOperation *operation, NSError *error))failure {
+- (void)setCompletionBlockWithSuccess:(void (^)(NSURLSessionDataTask *task, id responseObject))success
+                              failure:(void (^)(NSURLSessionDataTask *task, NSError *error))failure {
 	__weak DZDictionaryRequestOperation *safeOp = self;
     self.completionBlock = ^ {
         if ([safeOp isCancelled]) {
@@ -76,8 +76,8 @@ static dispatch_queue_t xml_request_operation_processing_queue() {
 }
 
 + (DZDictionaryRequestOperation *)dictionaryRequestOperationWithRequest:(NSURLRequest *)urlRequest
-																success:(void (^)(AFHTTPRequestOperation *operation,  NSDictionary *responseObject))success
-																failure:(void (^)(AFHTTPRequestOperation *operation, NSError *error))failure {
+																success:(void (^)(NSURLSessionDataTask *task,  NSDictionary *responseObject))success
+																failure:(void (^)(NSURLSessionDataTask *task, NSError *error))failure {
 	DZDictionaryRequestOperation *requestOperation = [[self alloc] initWithRequest:urlRequest];
 	[requestOperation setCompletionBlockWithSuccess: success failure: failure];
     return requestOperation;

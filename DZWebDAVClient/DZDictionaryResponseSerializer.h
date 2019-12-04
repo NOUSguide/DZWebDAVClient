@@ -1,5 +1,5 @@
 //
-//  DZDictionaryRequestOperation.h
+//  DZDictionaryResponseSerializer.h
 //  DZWebDAVClient
 //
 //  Created by Zachary Waldowski on 1/27/12.
@@ -8,7 +8,7 @@
 //  Licensed under MIT. See LICENSE.
 //
 
-#import "AFXMLRequestOperation.h"
+#import <AFNetworking/AFNetworking.h>
 
 /**
  `DZDictionaryRequestOperation` is a subclass of `AFXMLRequestOperation` for downloading and working with XML response data as an NSDictionary.
@@ -22,9 +22,9 @@
  
  ## Use With AFHTTPClient
  
- When `DZDictionaryRequestOperation` is registered with `AFHTTPClient`, the response object in the success callback of `HTTPRequestOperationWithRequest:success:failure:` will be an instance of `NSDictionary`. While the `AFXMLRequestOperation` properties `responseXMLParser` and `responseXMLDocument` are available, their use is not recommended to avoid parsing twice.
+ When `DZDictionaryResponseSerializer` is registered with `AFHTTPClient`, the response object in the success callback of `HTTPRequestOperationWithRequest:success:failure:` will be an instance of `NSDictionary`. While the `AFXMLRequestOperation` properties `responseXMLParser` and `responseXMLDocument` are available, their use is not recommended to avoid parsing twice.
  */
-@interface DZDictionaryRequestOperation : AFXMLRequestOperation
+@interface DZDictionaryResponseSerializer : AFXMLParserResponseSerializer
 
 /** An `NSDictionary` object parsed from the response data. */
 @property (readonly, nonatomic, strong) NSDictionary *responseDictionary;

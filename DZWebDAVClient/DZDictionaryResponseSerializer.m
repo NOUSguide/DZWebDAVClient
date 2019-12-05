@@ -6,86 +6,24 @@
 #import "DZDictionaryResponseSerializer.h"
 #import "DZXMLReader.h"
 
-static dispatch_queue_t xml_request_operation_processing_queue() {
-	static dispatch_queue_t dz_xml_request_operation_processing_queue = NULL;
-
-    if (dz_xml_request_operation_processing_queue == NULL) {
-        dz_xml_request_operation_processing_queue = dispatch_queue_create("com.dizzytechnology.networking.xml-request.processing", 0);
-    }
-    
-    return dz_xml_request_operation_processing_queue;
-}
-
-@interface DZDictionaryResponseSerializer ()
-@property (readwrite, nonatomic, strong) NSError *parseError;
-@end
-
 @implementation DZDictionaryResponseSerializer
 
-@synthesize responseDictionary = _responseDictionary, parseError = _parseError;
-
-- (NSDictionary *)responseDictionary {
-	if (!_responseDictionary && self.responseData.length && self.isFinished) {
-		NSError *error = nil;
-		_responseDictionary = [DZXMLReader dictionaryForXMLParser: self.responseXMLParser error: &error];
-		_parseError = error;
-	}
-	return _responseDictionary;
-}
-
-- (NSError *)error {
-    if (_parseError) {
-        return _parseError;
-    } else {
-        return [super error];
-    }
-}
-
-- (void)setCompletionBlockWithSuccess:(void (^)(NSURLSessionDataTask *task, id responseObject))success
-                              failure:(void (^)(NSURLSessionDataTask *task, NSError *error))failure {
-	__weak DZDictionaryRequestOperation *safeOp = self;
-    self.completionBlock = ^ {
-        if ([safeOp isCancelled]) {
-            return;
+- (id)responseObjectForResponse:(NSURLResponse *)response
+                           data:(NSData *)data
+                          error:(NSError *__autoreleasing *)error {
+    if ([super validateResponse:(NSHTTPURLResponse *)response data:data error:error]) {
+        NSXMLParser *parser = [super responseObjectForResponse:response data:data error:error];
+        if (error == nil || *error == nil) {
+            NSDictionary *responseDictionary = [DZXMLReader dictionaryForXMLParser:parser error:error];
+            return responseDictionary;
         }
-
-        dispatch_async(xml_request_operation_processing_queue(), ^(void) {
-            __strong DZDictionaryRequestOperation *strongSelf = safeOp;
-
-            if (strongSelf.error) {
-                if (failure) {
-                    dispatch_async(strongSelf.failureCallbackQueue ? strongSelf.failureCallbackQueue : dispatch_get_main_queue(), ^{
-                        failure(safeOp, safeOp.error);
-                    });
-                }
-            } else {
-                if (success) {
-                    NSDictionary *XML = safeOp.responseDictionary;
-
-                    dispatch_async(strongSelf.successCallbackQueue ? strongSelf.successCallbackQueue : dispatch_get_main_queue(), ^{
-                        if (safeOp.parseError && failure) {
-                            failure(safeOp, safeOp.parseError);
-                        } else if (!safeOp.parseError && success) {
-                            success(safeOp, XML);
-                        }
-                    });
-                }
-            }
-        });
-    };
+    } else if (error) *error = nil;
+    return nil;
 }
 
-+ (DZDictionaryRequestOperation *)dictionaryRequestOperationWithRequest:(NSURLRequest *)urlRequest
-																success:(void (^)(NSURLSessionDataTask *task,  NSDictionary *responseObject))success
-																failure:(void (^)(NSURLSessionDataTask *task, NSError *error))failure {
-	DZDictionaryRequestOperation *requestOperation = [[self alloc] initWithRequest:urlRequest];
-	[requestOperation setCompletionBlockWithSuccess: success failure: failure];
-    return requestOperation;
-}
-
-+ (BOOL)canProcessRequest:(NSURLRequest *)urlRequest {
-    NSArray *allowedHTTPMethods = @[@"GET", @"MKCOL", @"PUT", @"PROPFIND", @"LOCK", @"UNLOCK"];
-    return [allowedHTTPMethods containsObject:urlRequest.HTTPMethod] || [super canProcessRequest:urlRequest];
-}
+//+ (BOOL)canProcessRequest:(NSURLRequest *)urlRequest {
+//    NSArray *allowedHTTPMethods = @[@"GET", @"MKCOL", @"PUT", @"PROPFIND", @"LOCK", @"UNLOCK"];
+//    return [allowedHTTPMethods containsObject:urlRequest.HTTPMethod] || [super canProcessRequest:urlRequest];
+//}
 
 @end

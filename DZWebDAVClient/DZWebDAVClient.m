@@ -3,6 +3,7 @@
 //  DZWebDAVClient
 //
 
+#import <AFNetworking/AFNetworking.h>
 #import "DZWebDAVClient.h"
 #import "DZDictionaryResponseSerializer.h"
 #import "NSDate+RFC1123.h"
@@ -255,16 +256,36 @@ NSString const *DZWebDAVCreationDateKey		= @"creationdate";
 	return [self mr_listPath:path depth:2 success:success failure:failure];
 }
 
-- (NSURLSessionTask *)downloadPath:(NSString *)remoteSource toURL:(NSURL *)localDestination success:(void(^)(void))success failure:(void(^)(NSURLSessionDataTask *, NSError *))failure {
+- (NSURLSessionTask *)downloadPath:(NSString *)remoteSource
+                             toURL:(NSURL *)localDestination
+                          progress:(void(^)(long long totalBytesRead, long long totalBytesExpectedToRead))progressBlock
+                           success:(void(^)(void))success
+                           failure:(void(^)(NSURLSessionDownloadTask *, NSError *))failure {
 	if ([self.fileManager respondsToSelector:@selector(createDirectoryAtURL:withIntermediateDirectories:attributes:error:) ]) {
 		[self.fileManager createDirectoryAtURL: [localDestination URLByDeletingLastPathComponent] withIntermediateDirectories: YES attributes: nil error: NULL];
 	} else {
 		[self.fileManager createDirectoryAtPath: [localDestination.path stringByDeletingLastPathComponent] withIntermediateDirectories: YES attributes: nil error: NULL];
 	}
 	NSMutableURLRequest *request = [self requestWithMethod:@"GET" path:remoteSource parameters:nil];
-	NSURLSessionDataTask *task = [self mr_taskWithRequest:request success:success failure:failure];
-    
-	operation.outputStream = [NSOutputStream outputStreamWithURL: localDestination append: NO];
+
+    __block NSURLSessionDownloadTask *task;
+    task = [self downloadTaskWithRequest:request progress:^(NSProgress * _Nonnull downloadProgress) {
+        if (progressBlock) {
+            progressBlock(downloadProgress.completedUnitCount, downloadProgress.totalUnitCount);
+        }
+    } destination:^NSURL *(NSURL *targetPath, NSURLResponse *response) {
+        return localDestination;
+    } completionHandler:^(NSURLResponse *response, NSURL *filePath, NSError *error) {
+        if (error) {
+            if (failure) {
+                failure(task, error);
+            }
+        } else {
+            if (success) {
+                success();
+            }
+        }
+    }];
 
     [task resume];
     return task;
@@ -278,16 +299,39 @@ NSString const *DZWebDAVCreationDateKey		= @"creationdate";
 		[self.fileManager createDirectoryAtPath: localFolder.path withIntermediateDirectories: YES attributes: nil error: NULL];
 		hasURL = NO;
 	}
-	NSMutableArray *operations = [NSMutableArray arrayWithCapacity: remoteSources.count];
-	[remoteSources enumerateObjectsUsingBlock:^(NSString *remotePath, NSUInteger idx, BOOL *stop) {
-		NSURL *localDestination = hasURL ? [localFolder URLByAppendingPathComponent: remotePath isDirectory: [remotePath hasSuffix:@"/"]] : [NSURL URLWithString: remotePath relativeToURL: localFolder];
-		NSMutableURLRequest *request = [self requestWithMethod:@"GET" path:remotePath parameters:nil];
-		NSURLSessionDataTask *task = [self HTTPRequestOperationWithRequest:request success:NULL failure:NULL];
-		operation.outputStream = [NSOutputStream outputStreamWithURL:localDestination append:NO];
-		[operations addObject:operation];
+
+    NSMutableArray *tasks = [NSMutableArray arrayWithCapacity:remoteSources.count];
+    
+    dispatch_group_t group = dispatch_group_create();
+
+    [remoteSources enumerateObjectsUsingBlock:^(NSString *remotePath, NSUInteger idx, BOOL *stop) {
+        dispatch_group_enter(group);
+        
+        NSURL *localDestination = hasURL ? [localFolder URLByAppendingPathComponent: remotePath isDirectory: [remotePath hasSuffix:@"/"]]
+        : [NSURL URLWithString: remotePath relativeToURL: localFolder];
+
+        NSMutableURLRequest *request = [self requestWithMethod:@"GET" path:remotePath parameters:nil];
+        
+        __block NSURLSessionDownloadTask *task;
+        task = [self downloadTaskWithRequest:request progress:nil destination:^NSURL *(NSURL *targetPath, NSURLResponse *response) {
+            return localDestination;
+        } completionHandler:^(NSURLResponse *response, NSURL *filePath, NSError *error) {
+            if (progressBlock) {
+                progressBlock(tasks.count, remoteSources.count);
+            }
+            [tasks addObject:task];
+            dispatch_group_leave(group);
+        }];
+        [task resume];
 	}];
-	[self enqueueBatchOfHTTPRequestOperations:operations progressBlock:progressBlock completionBlock:completionBlock];
-    return operations;
+    
+    dispatch_group_notify(group, self.completionQueue ?: dispatch_get_main_queue(), ^{
+        if (completionBlock) {
+            completionBlock(tasks);
+        }
+    });
+
+    return tasks;
 }
 
 - (NSURLSessionTask *)makeCollection:(NSString *)path success:(void(^)(void))success failure:(void(^)(NSURLSessionDataTask *, NSError *))failure {

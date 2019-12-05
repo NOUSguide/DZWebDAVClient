@@ -170,8 +170,9 @@ extern NSString *DZWebDAVLastModifiedDateKey;
  */
 - (NSURLSessionTask *)downloadPath:(NSString *)remoteSource
                              toURL:(NSURL *)localDestination
+                          progress:(void(^)(long long totalBytesRead, long long totalBytesExpectedToRead))progressBlock
                            success:(void(^)(void))success
-                           failure:(void(^)(NSURLSessionDataTask *task, NSError *error))failure;
+                           failure:(void(^)(NSURLSessionDownloadTask *task, NSError *error))failure;
 
 /**
  Enqueues a group of multiple operations to download the contents of

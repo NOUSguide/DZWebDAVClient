@@ -33,7 +33,7 @@ NSString const *DZWebDAVCreationDateKey		= @"creationdate";
 - (id)initWithBaseURL:(NSURL *)url {
     NSURLSessionConfiguration *config = [NSURLSessionConfiguration defaultSessionConfiguration];
     config.requestCachePolicy = NSURLRequestReloadIgnoringLocalCacheData;
-    config.timeoutIntervalForRequest = 30;
+    config.timeoutIntervalForRequest = 60;
     
     if ((self = [super initWithBaseURL:url sessionConfiguration:config])) {
 		self.fileManager = [NSFileManager defaultManager];
@@ -174,7 +174,16 @@ NSString const *DZWebDAVCreationDateKey		= @"creationdate";
         }
 		if (responseObject == nil || ![responseObject isKindOfClass:[NSDictionary class]]) {
             if (failure) {
-                failure(task, [NSError errorWithDomain:AFURLResponseSerializationErrorDomain code:NSURLErrorCannotParseResponse userInfo:nil]);
+                NSInteger statusCode = ((NSHTTPURLResponse *)response).statusCode;
+                NSError *error;
+                if (statusCode == 403) {
+                    error = [NSError errorWithDomain:AFURLResponseSerializationErrorDomain code:statusCode userInfo: @{
+                        NSLocalizedDescriptionKey: _(@"Access denied")
+                    }];
+                } else {
+                    error = [NSError errorWithDomain:AFURLResponseSerializationErrorDomain code:NSURLErrorCannotParseResponse userInfo:nil];
+                }
+                failure(task, error);
             }
             return;
         }

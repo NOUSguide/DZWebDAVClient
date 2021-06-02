@@ -33,7 +33,7 @@ NSString const *DZWebDAVCreationDateKey		= @"creationdate";
 - (id)initWithBaseURL:(NSURL *)url {
     NSURLSessionConfiguration *config = [NSURLSessionConfiguration defaultSessionConfiguration];
     config.requestCachePolicy = NSURLRequestReloadIgnoringLocalCacheData;
-    config.timeoutIntervalForRequest = 60;
+    config.timeoutIntervalForRequest = 600;
     
     if ((self = [super initWithBaseURL:url sessionConfiguration:config])) {
 		self.fileManager = [NSFileManager defaultManager];
